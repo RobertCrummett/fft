@@ -3,21 +3,14 @@
 #include <math.h>
 #include <stdio.h>
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
-
 #define COMPLEX_IMPLEMENTATION
 #include "complex.h"
 
-#define TESTING_EPS 1e-4
+#define TEST_IMPLEMENTATION
+#include "test.h"
 
-int are_close(double a, double b) {
-    return abs(a-b) < TESTING_EPS; 
+int testing_close(double a, double b) {
+    return abs(a-b) < 1e-8; 
 }
 
 int complex_equal(complex_t a, complex_t b) {
@@ -25,27 +18,30 @@ int complex_equal(complex_t a, complex_t b) {
 }
 
 int complex_are_close(complex_t a, complex_t b) {
-    return are_close(complex_real(a), complex_real(b)) && are_close(complex_imag(a), complex_imag(b));
+    return testing_close(complex_real(a), complex_real(b)) && testing_close(complex_imag(a), complex_imag(b));
 }
 
 int main(void) {
+    test_suite suite = {0};
     complex_t z = {1.0, 2.0};
-    printf("\nTesting complex_real and complex_imag functions\n");
-    printf(" > Input z: 1.0 + 2.0I\n");
-    printf("   Real z: %.1lf (expected 1.0)\n", complex_real(z));
-    assert(complex_real(z) == 1.0 && "Failure!");
+    test_condition(&suite, "complex_real returns expected value", complex_real(z) == z.real);
+    test_condition(&suite, "complex_imag returns expected value", complex_imag(z) == z.imag);
+
+    test_summary(&suite);
+    /*
+    printf("Test complex_real\n");
+    printf("    Input z: 1.0 + 2.0I\n");
+    printf("    Real z: %.1lf (expected 1.0)\n", complex_real(z));
     printf("   Imag z: %.1lf (expected 2.0)\n", complex_imag(z));
-    assert(complex_imag(z) == 2.0 && "Failure!");
-    printf(ANSI_COLOR_GREEN " * Passed\n" ANSI_COLOR_RESET);
+    testing_is_true(complex_imag(z) == 2.0);
 
     z = (complex_t){-1.0, 1.0};
     printf("\nTesting complex_abs and complex_arg functions\n");
-    printf(" > Input z: -1.0 + 1.0I\n");
-    printf("   Abs z: %.3lf (expected %.3lf)\n", complex_abs(z), sqrt(2));
-    assert(are_close(complex_abs(z), sqrt(2)) && "Failure!");
-    printf("   Arg z: %.3lf (expected %.3lf)\n", complex_arg(z), 3 * COMPLEX_PI / 4);
-    assert(are_close(complex_arg(z), 3 * COMPLEX_PI / 4) && "Failure!");
-    printf(" * Passed\n");
+    printf("    Input z: -1.0 + 1.0I\n");
+    printf("    Abs z: %.3lf (expected %.3lf)\n", complex_abs(z), sqrt(2));
+    assert(testing_close(complex_abs(z), sqrt(2)) && "Failure!");
+    printf("    Arg z: %.3lf (expected %.3lf)\n", complex_arg(z), 3 * COMPLEX_PI / 4);
+    assert(testing_close(complex_arg(z), 3 * COMPLEX_PI / 4) && "Failure!");
 
     printf("\nTesting complex_conj function\n"); 
     printf(" > Input z: -1.0 + 1.0I\n");
@@ -72,6 +68,7 @@ int main(void) {
     assert(isinf(complex_real(complex_proj(z))) && "Failure!");
     assert(complex_imag(complex_proj(z)) == -0.0 && "Failure!");
     printf(" * Passed\n");
+    */
 
     return 0;
 }

@@ -2,8 +2,8 @@
 #define COMPLEX_H
 
 typedef struct complex_t {
-    double re;
-    double im;
+    double real;
+    double imag;
 } complex_t;
 
 extern complex_t complex_add(complex_t a, complex_t b);
@@ -69,11 +69,11 @@ complex_t complex_div(complex_t a, complex_t b) {
 }
 
 double complex_real(complex_t z) {
-    return z.re;
+    return z.real;
 }
 
 double complex_imag(complex_t z) {
-    return z.im;
+    return z.imag;
 }
 
 double complex_abs(complex_t z) {
