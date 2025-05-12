@@ -39,8 +39,6 @@ extern complex_t complex_asinh(complex_t z);
 extern complex_t complex_acosh(complex_t z);
 extern complex_t complex_atanh(complex_t z);
 
-#endif // COMPLEX_H
-
 #ifdef COMPLEX_IMPLEMENTATION
 
 #include <math.h>
@@ -209,3 +207,4 @@ complex_t complex_atanh(complex_t z) {
 }
 
 #endif // COMPLEX_IMPLEMENTATION
+#endif // COMPLEX_H

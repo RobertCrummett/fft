@@ -21,10 +21,6 @@
 
 int UNIT_TEST_COUNT = 0;
 
-static int close(double a, double b);
-static int complex_equal(complex_t a, complex_t b);
-static int complex_close(complex_t a, complex_t b);
-
 static char *test_complex_real(void);
 static char *test_complex_imag(void);
 static char *test_complex_abs(void);
@@ -107,7 +103,7 @@ int main(void) {
 }
 
 static int close(double a, double b) {
-    return abs(a-b) < 1e-8; 
+    return fabs(a-b) < 1e-8; 
 }
 
 static int complex_equal(complex_t a, complex_t b) {
