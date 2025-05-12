@@ -181,7 +181,7 @@ complex_t complex_atan(complex_t z) {
 complex_t complex_asinh(complex_t z) {
     const complex_t one = {1.0, 0.0};
 
-    complex_t a = complex_sub(one, complex_mul(z, z));
+    complex_t a = complex_add(one, complex_mul(z, z));
     complex_t b = complex_add(z, complex_sqrt(a));
 
     return complex_log(b);
@@ -202,7 +202,7 @@ complex_t complex_atanh(complex_t z) {
     const complex_t two = {2.0, 0.0};
 
     complex_t a = complex_log(complex_add(one, z));
-    complex_t b = complex_log(complex_sub(z, one));
+    complex_t b = complex_log(complex_sub(one, z));
     complex_t c = complex_sub(a, b);
     
     return complex_div(c, two);
