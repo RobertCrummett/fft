@@ -2,8 +2,15 @@
 #define FFT_H
 
 #include <stddef.h>
-#define COMPLEX_IMPLEMENTATION
 #include "complex.h"
+
+#ifdef FFT_STATIC
+#define FFT_PUBLICDEC static
+#define FFT_PUBLICDEF static
+#else
+#define FFT_PUBLICDEC extern
+#define FFT_PUBLICDEF
+#endif // FFT_STATIC
 
 /* Expected size of the auxillary space for the chirp Z transform and internal radix FFT calls */
 
@@ -12,10 +19,15 @@
 //
 // complex_t* aux = calloc(size + 2 * larger_size + larger_size / 2, sizeof(*aux));
 //
-extern void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride);
-extern void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride);
+FFT_PUBLICDEC void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride);
+FFT_PUBLICDEC void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride);
+
+#endif // FFT_H
 
 #ifdef FFT_IMPLEMENTATION
+
+#include <stddef.h>
+#include "complex.h"
 
 #ifndef FFT_PI
 #define FFT_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062
@@ -114,7 +126,7 @@ static void fft_radixifft(complex_t *data, complex_t *aux, size_t size, size_t s
 	}
 }
 
-void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
+FFT_PUBLICDEF void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 	size_t larger_size = 1, i;
 	while (larger_size >> 1 < size)
 		larger_size <<= 1;
@@ -144,7 +156,7 @@ void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 		data[i * stride] = complex_div(complex_mul(aux[size + i], aux[i]), (complex_t){larger_size, 0.0});
 }
 
-void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
+FFT_PUBLICDEF void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 	size_t larger_size = 1, i;
 	while (larger_size >> 1 < size)
 		larger_size <<= 1;
@@ -175,4 +187,3 @@ void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 }
 
 #endif // FFT_IMPLEMENTATION
-#endif // FFT_H
