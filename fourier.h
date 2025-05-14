@@ -1,43 +1,47 @@
-#ifndef FFT_H
-#define FFT_H
+#ifndef FOURIER_H
+#define FOURIER_H
 
 #include <stddef.h>
 #include "complex.h"
 
-#ifdef FFT_STATIC
-#define FFT_PUBLICDEC static
-#define FFT_PUBLICDEF static
+#ifdef FOURIER_STATIC
+#define FOURIER_PUBLICDEC static
+#define FOURIER_PUBLICDEF static
 #else
-#define FFT_PUBLICDEC extern
-#define FFT_PUBLICDEF
-#endif // FFT_STATIC
+#define FOURIER_PUBLICDEC extern
+#define FOURIER_PUBLICDEF
+#endif // FOURIER_STATIC
 
-/* Expected size of the auxillary space for the chirp Z transform and internal radix FFT calls */
+#ifndef FOURIER_PREFIX
+#define FOURIER_PREFIX(name) fourier_##name
+#endif // FOURIER_PREFIX
+
+/* Expected size of the auxillary space for the chirp Z transform and internal radix FOURIER calls */
 
 // size_t larger_size = 1;
 // while (larger_size >> 1 < size) larger_size <<= 1;
 //
 // complex_t* aux = calloc(size + 2 * larger_size + larger_size / 2, sizeof(*aux));
 //
-FFT_PUBLICDEC void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride);
-FFT_PUBLICDEC void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride);
+FOURIER_PUBLICDEC void FOURIER_PREFIX(fft)(complex_t *data, complex_t *aux, size_t size, size_t stride);
+FOURIER_PUBLICDEC void FOURIER_PREFIX(ifft)(complex_t *data, complex_t *aux, size_t size, size_t stride);
 
-#endif // FFT_H
+#endif // FOURIER_H
 
-#ifdef FFT_IMPLEMENTATION
+#ifdef FOURIER_IMPLEMENTATION
 
 #include <stddef.h>
 #include "complex.h"
 
-#ifndef FFT_PI
-#define FFT_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062
-#endif // FFT_PI
+#ifndef FOURIER_PI
+#define FOURIER_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062
+#endif // FOURIER_PI
 
-#ifndef FFT_I
-#define FFT_I ((complex_t){0.0, 1.0})
-#endif // FFT_I
+#ifndef FOURIER_I
+#define FOURIER_I ((complex_t){0.0, 1.0})
+#endif // FOURIER_I
 
-static void *fft_memset(void *s, int c, size_t n) {
+static void *fourier__memset(void *s, int c, size_t n) {
     unsigned char *dst = s;
     while (n > 0) {
         *dst = (unsigned char)c;
@@ -47,17 +51,17 @@ static void *fft_memset(void *s, int c, size_t n) {
     return s;
 }
 
-static void fft_swap(complex_t* a, complex_t* b) {
+static void fourier__swap(complex_t* a, complex_t* b) {
 	complex_t temp = *a;
 	*a = *b;
 	*b = temp;
 }
 
-static void fft_shuffle(complex_t* data, size_t size, size_t stride) {
+static void fourier__shuffle(complex_t* data, size_t size, size_t stride) {
 	size_t position, mask, target = 0;
 	for (position = 0; position < size; position++) {
 		if (target > position)
-			fft_swap(&data[position * stride], &data[target * stride]);
+			fourier__swap(&data[position * stride], &data[target * stride]);
 
 		mask = size >> 1;
 
@@ -69,14 +73,14 @@ static void fft_shuffle(complex_t* data, size_t size, size_t stride) {
 	}
 }
 
-static void fft_radixfft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
+static void fourier__radixfft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 	size_t i, step, jump, group, pair, match, halfsize = size / 2;
 	complex_t twiddle, product;
 
-	fft_shuffle(data, size, stride);
+	fourier__shuffle(data, size, stride);
 
 	for (i = 0; i < halfsize; i++)
-		aux[i] = complex_exp(complex_mul(FFT_I, (complex_t){-FFT_PI * i / halfsize, 0.0}));
+		aux[i] = complex_exp(complex_mul(FOURIER_I, (complex_t){-FOURIER_PI * i / halfsize, 0.0}));
 
 	for (step = 1; step < size; step <<= 1) {
 		jump = step << 1;
@@ -97,14 +101,14 @@ static void fft_radixfft(complex_t *data, complex_t *aux, size_t size, size_t st
 	}
 }
 
-static void fft_radixifft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
+static void fourier__radixifft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 	size_t i, step, jump, group, pair, match, halfsize = size / 2;
 	complex_t twiddle, product;
 
-	fft_shuffle(data, size, stride);
+	fourier__shuffle(data, size, stride);
 
 	for (i = 0; i < halfsize; i++)
-		aux[i] = complex_exp(complex_mul(FFT_I, (complex_t){FFT_PI * i / halfsize, 0.0}));
+		aux[i] = complex_exp(complex_mul(FOURIER_I, (complex_t){FOURIER_PI * i / halfsize, 0.0}));
 
 
 	for (step = 1; step < size; step <<= 1) {
@@ -126,64 +130,64 @@ static void fft_radixifft(complex_t *data, complex_t *aux, size_t size, size_t s
 	}
 }
 
-FFT_PUBLICDEF void fft_fft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
+FOURIER_PUBLICDEF void FOURIER_PREFIX(fft)(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 	size_t larger_size = 1, i;
 	while (larger_size >> 1 < size)
 		larger_size <<= 1;
 
 	for (i = 0; i < size; i++)
-		aux[i] = complex_exp(complex_mul(FFT_I, (complex_t){-FFT_PI * i * i / size, 0.0}));
+		aux[i] = complex_exp(complex_mul(FOURIER_I, (complex_t){-FOURIER_PI * i * i / size, 0.0}));
 
 	for (i = 0; i < size; i++)
 		aux[size + i] = complex_mul(aux[i], data[i * stride]);
 
-	fft_memset(aux + size + larger_size, 0, larger_size * sizeof(*aux));
+	fourier__memset(aux + size + larger_size, 0, larger_size * sizeof(*aux));
 	aux[size + larger_size] = aux[0];
 	for (i = 1; i < size; i++) {
 		aux[size + larger_size + i]     = complex_conj(aux[i]);
 		aux[size + 2 * larger_size - i] = complex_conj(aux[i]);
 	}
 
-	fft_radixfft(aux + size, aux + size + 2 * larger_size, larger_size, 1);
-	fft_radixfft(aux + size + larger_size, aux + size + 2 * larger_size, larger_size, 1);
+	fourier__radixfft(aux + size, aux + size + 2 * larger_size, larger_size, 1);
+	fourier__radixfft(aux + size + larger_size, aux + size + 2 * larger_size, larger_size, 1);
 
 	for (i = 0; i < larger_size; i++)
 		aux[size + i] = complex_mul(aux[size + i], aux[size + larger_size + i]);
 
-	fft_radixifft(aux + size, aux + size + 2 * larger_size, larger_size, 1);
+	fourier__radixifft(aux + size, aux + size + 2 * larger_size, larger_size, 1);
 
 	for (i = 0; i < size; i++)
 		data[i * stride] = complex_div(complex_mul(aux[size + i], aux[i]), (complex_t){larger_size, 0.0});
 }
 
-FFT_PUBLICDEF void fft_ifft(complex_t *data, complex_t *aux, size_t size, size_t stride) {
+FOURIER_PUBLICDEF void FOURIER_PREFIX(ifft)(complex_t *data, complex_t *aux, size_t size, size_t stride) {
 	size_t larger_size = 1, i;
 	while (larger_size >> 1 < size)
 		larger_size <<= 1;
 
 	for (i = 0; i < size; i++)
-		aux[i] = complex_exp(complex_mul(FFT_I, (complex_t){FFT_PI * i * i / size, 0.0}));
+		aux[i] = complex_exp(complex_mul(FOURIER_I, (complex_t){FOURIER_PI * i * i / size, 0.0}));
 
 	for (i = 0; i < size; i++)
 		aux[size + i] = complex_mul(aux[i], data[i * stride]);
 
-	fft_memset(aux + size + larger_size, 0, larger_size * sizeof(*aux));
+	fourier__memset(aux + size + larger_size, 0, larger_size * sizeof(*aux));
 	aux[size + larger_size] = aux[0];
 	for (i = 1; i < size; i++) {
 		aux[size + larger_size + i]     = complex_conj(aux[i]);
 		aux[size + 2 * larger_size - i] = complex_conj(aux[i]);
 	}
 
-	fft_radixfft(aux + size, aux + size + 2 * larger_size,larger_size, 1);
-	fft_radixfft(aux + size + larger_size, aux + size + 2 * larger_size, larger_size, 1);
+	fourier__radixfft(aux + size, aux + size + 2 * larger_size,larger_size, 1);
+	fourier__radixfft(aux + size + larger_size, aux + size + 2 * larger_size, larger_size, 1);
 
 	for (i = 0; i < larger_size; i++)
 		aux[size + i] = complex_mul(aux[size + i], aux[size + larger_size + i]);
 
-	fft_radixifft(aux + size, aux + size + 2 * larger_size, larger_size, 1);
+	fourier__radixifft(aux + size, aux + size + 2 * larger_size, larger_size, 1);
 
 	for (i = 0; i < size; i++)
 		data[i * stride] = complex_div(complex_mul(aux[size + i], aux[i]), (complex_t){larger_size, 0.0});
 }
 
-#endif // FFT_IMPLEMENTATION
+#endif // FOURIER_IMPLEMENTATION

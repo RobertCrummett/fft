@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define FFT_IMPLEMENTATION
-#include "fft.h"
+#define FOURIER_IMPLEMENTATION
+#include "fourier.h"
 
 #define COMPLEX_IMPLEMENTATION
 #include "complex.h"
@@ -107,25 +107,25 @@ static char *test_fft(void) {
 
     printf("GROUP 1:\n");
     setup_test_group_one(&group);
-    fft_fft(group.input, group.auxillary, group.size, group.stride);
+    fourier_fft(group.input, group.auxillary, group.size, group.stride);
     ASSERT("error, input != expected", group_close(&group));
     group_free(&group);
 
     printf("GROUP 2:\n");
     setup_test_group_two(&group);
-    fft_fft(group.input, group.auxillary, group.size, group.stride);
+    fourier_fft(group.input, group.auxillary, group.size, group.stride);
     ASSERT("error, input != expected", group_close(&group));
     group_free(&group);
 
     printf("GROUP 3:\n");
     setup_test_group_three(&group);
-    fft_fft(group.input, group.auxillary, group.size, group.stride);
+    fourier_fft(group.input, group.auxillary, group.size, group.stride);
     ASSERT("error, input != expected", group_close(&group));
     group_free(&group);
 
     printf("GROUP 4:\n");
     setup_test_group_four(&group);
-    fft_fft(group.input, group.auxillary, group.size, group.stride);
+    fourier_fft(group.input, group.auxillary, group.size, group.stride);
     ASSERT("error, input != expected", group_close(&group));
     group_free(&group);
 
@@ -137,7 +137,7 @@ static char *test_ifft(void) {
 
     printf("GROUP 1:\n");
     setup_test_group_one(&group);
-    fft_ifft(group.expected, group.auxillary, group.size, group.stride);
+    fourier_ifft(group.expected, group.auxillary, group.size, group.stride);
     for (size_t i = 0; i < group.size; i++)
         group.expected[i] = complex_div(group.expected[i], (complex_t){group.size, 0.0});
     ASSERT("error, input != expected", group_close(&group));
@@ -145,7 +145,7 @@ static char *test_ifft(void) {
 
     printf("GROUP 2:\n");
     setup_test_group_two(&group);
-    fft_ifft(group.expected, group.auxillary, group.size, group.stride);
+    fourier_ifft(group.expected, group.auxillary, group.size, group.stride);
     for (size_t i = 0; i < group.size; i++)
         group.expected[i] = complex_div(group.expected[i], (complex_t){group.size, 0.0});
     ASSERT("error, input != expected", group_close(&group));
@@ -153,7 +153,7 @@ static char *test_ifft(void) {
 
     printf("GROUP 3:\n");
     setup_test_group_three(&group);
-    fft_ifft(group.expected, group.auxillary, group.size, group.stride);
+    fourier_ifft(group.expected, group.auxillary, group.size, group.stride);
     for (size_t i = 0; i < group.size; i++)
         group.expected[i] = complex_div(group.expected[i], (complex_t){group.size, 0.0});
     ASSERT("error, input != expected", group_close(&group));
@@ -161,7 +161,7 @@ static char *test_ifft(void) {
 
     printf("GROUP 4:\n");
     setup_test_group_four(&group);
-    fft_ifft(group.expected, group.auxillary, group.size, group.stride);
+    fourier_ifft(group.expected, group.auxillary, group.size, group.stride);
     for (size_t i = 0; i < group.size; i++)
         group.expected[i] = complex_div(group.expected[i], (complex_t){group.size, 0.0});
     ASSERT("error, input != expected", group_close(&group));
