@@ -4,9 +4,6 @@
 #define FOURIER_IMPLEMENTATION
 #include "fourier.h"
 
-#define COMPLEX_IMPLEMENTATION
-#include "complex.h"
-
 #include <math.h>
 #include <stdio.h>
 
