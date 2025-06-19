@@ -245,11 +245,8 @@ void rfft(cdouble *data, size_t size, cdouble *aux, size_t aux_size, size_t stri
 			const cdouble Cj = data[j * stride];
 			const cdouble Wi = aux[i];
 
-			cdouble Zx = caddz(Ci, conjz(Cj));
-			Zx = cmulz(Zx, COMPLEX(0.5, 0.0));
-
-			cdouble Zy = csubz(Ci, conjz(Cj));
-			Zy = cmulz(Zy, COMPLEX(0.0, -0.5));
+			const cdouble Zx = cmulz(caddz(Ci, conjz(Cj)), COMPLEX(0.5, 0.0));
+			const cdouble Zy = cmulz(csubz(Ci, conjz(Cj)), COMPLEX(0.0, -0.5));
 
 			if (i == j)
 				data[i * stride] = caddz(Zx, cmulz(Wi, Zy));

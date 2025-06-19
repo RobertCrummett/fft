@@ -1,8 +1,11 @@
+CC=tcc
+CFLAGS=-g -Wall -Wextra -Wpedantic
+
 main.exe: main.o rnc_fft.o
-	tcc -o $@ $^
+	$(CC) -o $@ $^
 
 main.o: main.c
-	tcc -o $@ -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-rnc_fft.o: rnc_fft.c
-	tcc -o $@ -c $<
+fft.o: fft.c
+	$(CC) $(CFLAGS) -o $@ -c $<
