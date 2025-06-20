@@ -4,6 +4,8 @@ Fast Fourier Transform
 While I could have taken a highly optimized FFT from the interweb and used it, I decided to roll my own.
 The reason I prefer to ''recreate the wheel'' is that I wanted to _learn_. Deal with it.
 
+See the `examples` directory for documented tutorials on usage.
+
 Dependencies
 ------------
 
