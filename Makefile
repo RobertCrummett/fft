@@ -1,7 +1,7 @@
 CC=tcc
 CFLAGS=-g -Wall -Wextra -Wpedantic
 
-main.exe: main.o rnc_fft.o
+main.exe: main.o fft.o
 	$(CC) -o $@ $^
 
 main.o: main.c

@@ -3,11 +3,10 @@
 
 #include "fft.h"
 
-#define SIZE 8
+#define SIZE 12
 
-#define REAL
-#ifdef REAL
 int main(void) {
+#ifdef REAL
 	double *data = malloc(SIZE * sizeof *data);
 
 	for (int i = 0; i < SIZE; i++)
@@ -26,10 +25,13 @@ int main(void) {
 	for (int i = 0; i < SIZE / 2; i++)
 		printf("%d: %lf %lf\n", i, cdata[i].real, cdata[i].imag);
 
-	return 0;
-}
+	if (rfft1d(cdata, SIZE, FFT_INVERSE))
+		return 1;
+
+	printf("time domain:\n");
+	for (int i = 0; i < SIZE; i++)
+		printf("%d: %lf %lf\n", i, data[i]);
 #else
-int main(void) {
 	cdouble *data = malloc(SIZE * sizeof *data);
 
 	for (int i = 0; i < SIZE; i++)
@@ -52,7 +54,9 @@ int main(void) {
 	printf("time domain:\n");
 	for (int i = 0; i < SIZE; i++)
 		printf("%d: %lf %lf\n", i, data[i].real, data[i].imag);
+#endif // REAL
+
+	free(data);
 
 	return 0;
 }
-#endif // REAL

@@ -1,3 +1,8 @@
+// Fast Fourier Transform (FFT) implemenation
+//
+// [Robert] Nate Crummett
+// robertcrummett@robertcrummett.com
+
 #include "fft.h"
 
 #include <math.h>
@@ -96,12 +101,12 @@ void fftradix(cdouble *data, size_t size, cdouble *aux, size_t stride, int plan)
 
 	if (plan & FFT_FORWARD_TWIDDLES) {
 		for (size_t i = 0; i < halfsize; i++)
-			aux[i] = cexpz(COMPLEX(0.0, -M_PI * i / halfsize));
+			aux[i] = cexpz(COMPLEX(0.0, (-M_PI * i) / halfsize));
 	}
 
 	if (plan & FFT_INVERSE_TWIDDLES) {
 		for (size_t i = 0; i < halfsize; i++)
-			aux[i] = cexpz(COMPLEX(0.0, M_PI * i / halfsize));
+			aux[i] = cexpz(COMPLEX(0.0, (M_PI * i) / halfsize));
 	}
 
 	if (plan & FFT_BUTTERFLY) {
@@ -145,12 +150,12 @@ void fft(cdouble *data, size_t size, cdouble *aux, size_t aux_size, size_t strid
 
 	if (plan & FFT_FORWARD_TWIDDLES) {
 		for (size_t i = 0; i < size; i++)
-			aux[i] = cexpz(COMPLEX(0.0, -M_PI * i * i / size));
+			aux[i] = cexpz(COMPLEX(0.0, ((-M_PI * i) * i) / size));
 	}
 
 	if (plan & FFT_INVERSE_TWIDDLES) {
 		for (size_t i = 0; i < size; i++)
-			aux[i] = cexpz(COMPLEX(0.0, M_PI * i * i / size));
+			aux[i] = cexpz(COMPLEX(0.0, ((M_PI * i) * i) / size));
 	}
 
 
@@ -221,21 +226,20 @@ int fft1d(cdouble *data, size_t size, int forward)
 
 void rfft(cdouble *data, size_t size, cdouble *aux, size_t aux_size, size_t stride, int plan)
 {
-	if (plan & FFT_FORWARD_REAL)
+	if (plan & FFT_FORWARD_REAL) {
 		fft(data, size, aux, aux_size, stride,
 				FFT_FORWARD_TWIDDLES |
 				FFT_CHIRPZ);
+	}
 
-	if (plan & FFT_INVERSE_REAL)
-		fft(data, size, aux, aux_size, stride,
-				FFT_INVERSE_TWIDDLES |
-				FFT_CHIRPZ |
-				FFT_NORMALIZE);
+	if (plan & FFT_FORWARD_TWIDDLES) {
+		for (size_t i = 1; i < size; i++) {
+			const double phi = (-M_PI * i) / size;
+			aux[i] = COMPLEX(cos(phi), sin(phi));
+		}
+	}
 
 	if (plan & FFT_FORWARD_MIXING) {
-		for (size_t i = 1; i < size; i++)
-			aux[i] = cexpz(COMPLEX(0.0, -M_PI * i / size));
-
 		data[0] = COMPLEX(data[0].real + data[0].imag, data[0].real - data[0].imag);
 
 		for (size_t i = 1; i < size / 2 + 1; i++) {
@@ -245,16 +249,63 @@ void rfft(cdouble *data, size_t size, cdouble *aux, size_t aux_size, size_t stri
 			const cdouble Cj = data[j * stride];
 			const cdouble Wi = aux[i];
 
-			const cdouble Zx = cmulz(caddz(Ci, conjz(Cj)), COMPLEX(0.5, 0.0));
-			const cdouble Zy = cmulz(csubz(Ci, conjz(Cj)), COMPLEX(0.0, -0.5));
+			const cdouble Ze = cmulz(caddz(Ci, conjz(Cj)), COMPLEX(0.5, 0.0));
+			const cdouble Zo = cmulz(csubz(Ci, conjz(Cj)), COMPLEX(0.0,-0.5));
 
-			if (i == j)
-				data[i * stride] = caddz(Zx, cmulz(Wi, Zy));
-			else {
-				const cdouble WiZy = cmulz(Wi, Zy);
-				data[i * stride] = caddz(Zx, WiZy);
-				data[j * stride] = conjz(csubz(Zx, WiZy));
-			}
+			const cdouble WiZo = cmulz(Wi, Zo);
+
+			data[i * stride] = caddz(Ze, WiZo);
+			data[j * stride] = conjz(csubz(Ze, WiZo));
+		}
+	}
+
+	if (plan & FFT_INVERSE_TWIDDLES) {
+		for (size_t i = 1; i < size; i++) {
+			const double phi = (M_PI * i) / size;
+			aux[i] = COMPLEX(cos(phi), sin(phi));
+		}
+	}
+
+	if (plan & FFT_INVERSE_MIXING) {
+		data[0] = COMPLEX(data[0].real + data[0].imag, data[0].real - data[0].imag);
+
+		for (size_t i = 1; i < size / 2 + 1; i++) {
+			const size_t j = size - i;
+
+			const cdouble Ci = data[i * stride];
+			const cdouble Cj = data[j * stride];
+			const cdouble Wi = aux[i];
+			const cdouble Wj = aux[j];
+
+			cdouble Ze = caddz(Ci, conjz(Cj));
+			cdouble Zo = csubz(Ci, conjz(Cj));
+
+			const cdouble WiZo = cmulz(Wi, Zo);
+			data[i * stride] = caddz(Ze, cmulz(WiZo, IMAGINARY));
+
+			Ze = caddz(Cj, conjz(Ci));
+			Zo = csubz(Cj, conjz(Ci));
+
+			const cdouble WjZo = cmulz(Wj, Zo);
+			data[j * stride] = caddz(Ze, cmulz(WjZo, IMAGINARY));
+		}
+
+		for (size_t i = 0; i < size; i++) {
+			data[i * stride].real /= 2;
+			data[i * stride].imag /= 2;
+		}
+	}
+
+	if (plan & FFT_INVERSE_REAL) {
+		fft(data, size, aux, aux_size, stride,
+				FFT_INVERSE_TWIDDLES |
+				FFT_CHIRPZ);
+	}
+
+	if (plan & FFT_NORMALIZE) {
+		for (size_t i = 0; i < size; i++) {
+			data[i * stride].real /= size;
+			data[i * stride].imag /= size;
 		}
 	}
 }
@@ -282,8 +333,8 @@ int rfft1d(double *data, size_t size, int forward)
 	}
 
 	int plan = forward ? 
-		FFT_FORWARD_REAL | FFT_FORWARD_MIXING :
-		FFT_INVERSE_REAL | FFT_INVERSE_MIXING;
+		FFT_FORWARD_TWIDDLES | FFT_FORWARD_REAL | FFT_FORWARD_MIXING :
+		FFT_INVERSE_TWIDDLES | FFT_INVERSE_REAL | FFT_INVERSE_MIXING | FFT_NORMALIZE;
 
 	rfft(cdata, half_size, aux, aux_size, 1, plan);
 
@@ -291,3 +342,14 @@ int rfft1d(double *data, size_t size, int forward)
 
 	return 0;
 }
+
+/* Permission to use, copy, modify, and/or distribute this software for       */
+/* any purpose with or without fee is hereby granted.                         */
+/*                                                                            */
+/* THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL              */
+/* WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES   */
+/* OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE     */
+/* FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY         */
+/* DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN */
+/* AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT    */
+/* OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.          */
