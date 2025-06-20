@@ -1,11 +1,17 @@
 CC=tcc
-CFLAGS=-g -Wall -Wextra -Wpedantic
+CFLAGS=-g -Wall -Wextra -Wpedantic -I.
 
-main.exe: main.o fft.o
+bin/00_fft1d.exe: obj/00_fft1d.o obj/fft.o
 	$(CC) -o $@ $^
 
-main.o: main.c
+obj/00_fft1d.o: examples/00_fft1d.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-fft.o: fft.c
+obj/fft.o: fft.c
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+clean:
+	del obj/*.o
+	del bin/*.exe
+
+.PHONY: clean
